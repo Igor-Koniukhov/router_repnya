@@ -68,7 +68,7 @@ func (rout *RoutServeMux) OPTIONS(pattern string, hf http.HandlerFunc) {
 }
 
 // ServeStaticFile - serve static files and strip pointed directory
-// name of directory should writes with slash, example: "/folder/"
+// name of directory should writes with no slash, example: "folder"
 func (rout *RoutServeMux) ServeStaticFiles(folderName string) {
 	rout.assign("GET", `/`+folderName+`/`,
 		rout.HFM(http.StripPrefix(`/`+folderName+`/`,
