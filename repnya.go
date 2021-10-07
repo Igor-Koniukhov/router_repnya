@@ -1,8 +1,10 @@
 package Repnya
 
 import (
+	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 )
 
 type RoutServe interface {
@@ -81,6 +83,20 @@ func (rout *RoutServeMux) assign(method, pattern string, hf http.HandlerFunc) {
 	rout.Handlers[method]=append(handlers, handler)
 
 }
+
+func GetKeyInt(r *http.Request, key string) (id int) {
+	str := r.URL.Query().Get(key)
+	id, err := strconv.Atoi(str)
+	if err != nil {
+		log.Println(err)
+	}
+	return
+}
+func GetKeyStr(r *http.Request, param string) string {
+	str := r.URL.Query().Get(param)
+	return str
+}
+
 func (rh *RoutHandler) getMapKey(path string) (url.Values, bool) {
 	mapValues := make(url.Values)
 	var  j int
