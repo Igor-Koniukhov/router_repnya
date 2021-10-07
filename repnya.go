@@ -104,6 +104,16 @@ func (rh *RoutHandler) getMapKey(path string) (url.Values, bool) {
 	return mapValues, true
 }
 
+func match(s string, f func(byte) bool, i int) (slice string, next byte, j int) {
+	for j=i; j < len(s) && f(s[j]); {
+		j++
+	}
+	if j < len(s) {
+		next = s[j]
+	}
+	return s[i:j], next, j
+}
+
 func isString(byte byte) bool {
 	return 'a' <= byte && byte <= 'z' || 'A' <= byte && byte <= 'Z' || byte == '_'
 }
