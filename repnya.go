@@ -1,6 +1,9 @@
 package Repnya
 
-import "net/http"
+import (
+	"net/http"
+	"net/url"
+)
 
 type RoutServe interface {
 	ServeHTTP(w http.ResponseWriter, r *http.Request)
@@ -14,6 +17,7 @@ type RoutServe interface {
 	GetKeyInt(r *http.Request, key string) (id int)
 	GetKeyStr(r *http.Request, param string) string
 	assign(method string, pattern string, hf http.HandlerFunc)
+	getMapKey(path string) (url.Values, bool)
 }
 type RoutHandler struct {
 	Pattern string
@@ -76,4 +80,38 @@ func (rout *RoutServeMux) assign(method, pattern string, hf http.HandlerFunc) {
 	}
 	rout.Handlers[method]=append(handlers, handler)
 
+}
+func (rh *RoutHandler) getMapKey(path string) (url.Values, bool) {
+	mapValues := make(url.Values)
+	var  j int
+	for i:=j; i < len(path); i++ {
+		switch {
+		case j >= len(rh.Pattern):
+			if rh.Pattern != "/" && len(rh.Pattern) > 0 && rh.Pattern[len(rh.Pattern)-1] == '/' {
+				return mapValues, true
+			}
+			return nil, false
+
+		case path[i] == rh.Pattern[j]:
+			j++
+		default:
+			return nil, false
+		}
+	}
+	if j != len(rh.Pattern) {
+		return nil, false
+	}
+	return mapValues, true
+}
+
+func isString(byte byte) bool {
+	return 'a' <= byte && byte <= 'z' || 'A' <= byte && byte <= 'Z' || byte == '_'
+}
+
+func isInt(byte byte) bool {
+	return '0' <= byte && byte <= '9'
+}
+
+func isStrOrInt(byte byte) bool {
+	return isString(byte) || isInt(byte)
 }
