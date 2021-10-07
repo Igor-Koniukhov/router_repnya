@@ -1,0 +1,16 @@
+.idea
+*.iml
+out
+gen
+*.exe
+*.exe~
+/node_modules
+/storage/*.key
+/vendor
+/logs
+.env
+.env.testing
+.env.test
+.phpunit.result.cache
+npm-debug.log
+yarn-error.log
