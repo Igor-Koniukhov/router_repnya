@@ -91,7 +91,16 @@ func (rh *RoutHandler) getMapKey(path string) (url.Values, bool) {
 				return mapValues, true
 			}
 			return nil, false
-
+		case rh.Pattern[j] == ':':
+			var name, val string
+			var nextSymbol byte
+			name, nextSymbol, j = match(rh.Pattern, isStrOrInt, j+1)
+			val, _, i = match(path, matchPart(nextSymbol), i)
+			escapedVal, err := url.QueryUnescape(val)
+			if err != nil {
+				return nil, false
+			}
+			mapValues.Add(":"+name, escapedVal)
 		case path[i] == rh.Pattern[j]:
 			j++
 		default:
