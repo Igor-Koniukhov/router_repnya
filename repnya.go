@@ -16,8 +16,6 @@ type RoutServe interface {
 	DEL(pattern string, hf http.HandlerFunc)
 	OPTIONS(pattern string, hf http.HandlerFunc)
 	ServeStaticFiles(folderName string)
-	GetKeyInt(r *http.Request, key string) (id int)
-	GetKeyStr(r *http.Request, param string) string
 	assign(method string, pattern string, hf http.HandlerFunc)
 	getMapKey(path string) (url.Values, bool)
 }
@@ -30,45 +28,48 @@ type RoutServeMux struct {
 }
 
 func (rout *RoutServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
+	for _, handler := range rout.Handlers[r.Method] {
+		if params, ok := handler.getMapKey(r.URL.EscapedPath()); ok {
+			if len(params) > 0  {
+				r.URL.RawQuery = params.Encode()
+			}
+			handler.ServeHTTP(w, r)
+			return
+		}
+	}
 }
 
 func (rout *RoutServeMux) HEAD(pattern string, hf http.HandlerFunc) {
-	rout.assign("HEAD", pattern , hf)
+	rout.assign("HEAD", pattern, hf)
 }
 
 func (rout RoutServeMux) GET(pattern string, hf http.HandlerFunc) {
-	rout.assign("GET", pattern , hf)
+	rout.assign("GET", pattern, hf)
 }
 
 func (rout *RoutServeMux) POST(pattern string, hf http.HandlerFunc) {
-	rout.assign("POST", pattern , hf)
+	rout.assign("POST", pattern, hf)
 }
 
 func (rout RoutServeMux) PUT(pattern string, hf http.HandlerFunc) {
-	rout.assign("PUT", pattern , hf)
+	rout.assign("PUT", pattern, hf)
 }
 
 func (rout *RoutServeMux) DEL(pattern string, hf http.HandlerFunc) {
-	rout.assign("DELETE", pattern , hf)
+	rout.assign("DELETE", pattern, hf)
 }
 
 func (rout *RoutServeMux) OPTIONS(pattern string, hf http.HandlerFunc) {
-	rout.assign("Options", pattern , hf)
+	rout.assign("Options", pattern, hf)
 }
 
+// ServeStaticFile - serve static files and strip pointed directory
+// name of directory should writes with slash, example: "/folder/"
 func (rout *RoutServeMux) ServeStaticFiles(folderName string) {
-	panic("implement me")
+	rout.assign("GET", `/`+folderName+`/`,
+		rout.HFM(http.StripPrefix(`/`+folderName+`/`,
+			http.FileServer(http.Dir(`./`+folderName+`/`)))))
 }
-
-func (rout RoutServeMux) GetKeyInt(r *http.Request, key string) (id int) {
-	panic("implement me")
-}
-
-func (rout *RoutServeMux) GetKeyStr(r *http.Request, param string) string {
-	panic("implement me")
-}
-
 func (rout *RoutServeMux) assign(method, pattern string, hf http.HandlerFunc) {
 	handlers := rout.Handlers[method]
 	for _, handler := range handlers {
@@ -80,8 +81,13 @@ func (rout *RoutServeMux) assign(method, pattern string, hf http.HandlerFunc) {
 		Pattern:     pattern,
 		HandlerFunc: hf,
 	}
-	rout.Handlers[method]=append(handlers, handler)
+	rout.Handlers[method] = append(handlers, handler)
 
+}
+func (rout *RoutServeMux) HFM(next http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(w, r)
+	}
 }
 
 func GetKeyInt(r *http.Request, key string) (id int) {
@@ -99,8 +105,8 @@ func GetKeyStr(r *http.Request, param string) string {
 
 func (rh *RoutHandler) getMapKey(path string) (url.Values, bool) {
 	mapValues := make(url.Values)
-	var  j int
-	for i:=j; i < len(path); i++ {
+	var j int
+	for i := j; i < len(path); i++ {
 		switch {
 		case j >= len(rh.Pattern):
 			if rh.Pattern != "/" && len(rh.Pattern) > 0 && rh.Pattern[len(rh.Pattern)-1] == '/' {
@@ -136,7 +142,7 @@ func matchPart(b byte) func(byte) bool {
 }
 
 func match(s string, f func(byte) bool, i int) (slice string, next byte, j int) {
-	for j=i; j < len(s) && f(s[j]); {
+	for j = i; j < len(s) && f(s[j]); {
 		j++
 	}
 	if j < len(s) {
