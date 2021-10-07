@@ -27,6 +27,10 @@ type RoutServeMux struct {
 	Handlers map[string][]*RoutHandler
 }
 
+func NewRoutServeMux() *RoutServeMux {
+	return &RoutServeMux{Handlers: make(map[string][]*RoutHandler)}
+}
+
 func (rout *RoutServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, handler := range rout.Handlers[r.Method] {
 		if params, ok := handler.getMapKey(r.URL.EscapedPath()); ok {
