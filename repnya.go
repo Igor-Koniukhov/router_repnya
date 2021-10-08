@@ -66,6 +66,38 @@ func (rout *RoutServeMux) DEL(pattern string, hf http.HandlerFunc) {
 func (rout *RoutServeMux) OPTIONS(pattern string, hf http.HandlerFunc) {
 	rout.assign("Options", pattern, hf)
 }
+// CORS - sets in the Header necessary keys and values for CORS policy,
+// usage in the same way as any middleware - handler need to be wrapped
+func (rout *RoutServeMux) CORS(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		setupResponseCORS(&w, r)
+		if (*r).Method == "OPTIONS" {
+			return
+		}
+		next.ServeHTTP(w, r)
+	}
+}
+func (rout *RoutServeMux) JSON(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		setupResponseJSON(&w, r)
+		if (*r).Method == "OPTIONS" {
+			return
+		}
+		next.ServeHTTP(w, r)
+	}
+}
+
+func setupResponseCORS(w *http.ResponseWriter, r *http.Request) {
+	(*w).Header().Set("Content-Type", "application/json")
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+}
+func setupResponseJSON(w *http.ResponseWriter, r *http.Request) {
+	(*w).Header().Set("Content-Type", "application/json")
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Credentials", `true`)
+}
 
 // ServeStaticFile - serve static files and strip pointed directory
 // name of directory should writes with no slash, example: "folder"
