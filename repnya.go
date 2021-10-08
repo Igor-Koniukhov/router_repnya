@@ -79,7 +79,7 @@ func (rout *RoutServeMux) CORS(next http.HandlerFunc) http.HandlerFunc {
 }
 func (rout *RoutServeMux) JSON(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		setupResponseJSON(&w, r)
+		setupResponseJSON(w, r)
 		if (*r).Method == "OPTIONS" {
 			return
 		}
@@ -88,15 +88,14 @@ func (rout *RoutServeMux) JSON(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func setupResponseCORS(w *http.ResponseWriter, r *http.Request) {
-	(*w).Header().Set("Content-Type", "application/json")
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 }
-func setupResponseJSON(w *http.ResponseWriter, r *http.Request) {
-	(*w).Header().Set("Content-Type", "application/json")
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-	(*w).Header().Set("Access-Control-Allow-Credentials", `true`)
+func setupResponseJSON(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Credentials", `true`)
 }
 
 // ServeStaticFile - serve static files and strip pointed directory
